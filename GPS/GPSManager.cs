@@ -99,6 +99,22 @@ public class GPSManager
         };
     }
 
+    public void StartRecording()
+    {
+        try
+        {
+            reciever.Connect();
+        } catch (Exception e)
+        {
+            
+        }
+    }
+
+    public void StopRecording()
+    {
+        reciever.Disconnect();
+    }
+
     void positionReceived(double latitude, double longitude){
 
     }
