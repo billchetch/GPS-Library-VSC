@@ -23,7 +23,7 @@ public class GPSManager
         public double PDOP = 0;
         public double Speed = 0;
         public double Bearing = 0; //in degrees
-        String SentenceType = null;
+        String? SentenceType = null;
         public DateTime Timestamp;
 
         public GPSPositionData()
