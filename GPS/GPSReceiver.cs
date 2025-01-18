@@ -22,9 +22,14 @@ public class GPSReceiver : Chetch.Utilities.SerialPortDevice
     #endregion
 
     #region Events
-    public event EventHandler<String>? SenteceReeived;
+    public event EventHandler<String>? SentenceReeived;
     #endregion
 
+    #region Constructors
+    public GPSReceiver() : base(9600, Parity.None, 8, StopBits.One){}
+    #endregion
+
+    #region Methods
     protected override string getPortName()
     {
         String searchFor = String.Empty;
@@ -55,11 +60,12 @@ public class GPSReceiver : Chetch.Utilities.SerialPortDevice
             {
                 SentenceLastReceived = DateTime.Now;
                 LastSentenceReceived = sentence;
-                SenteceReeived?.Invoke(this, sentence);
+                SentenceReeived?.Invoke(this, sentence);
             }
             
         }
 
         base.OnDataReceived(data);
     }
+    #endregion
 }
