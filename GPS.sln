@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GPS", "GPS\GPS.csproj", "{2B58EDEC-6C4D-467C-BA13-3CCF99BD3E76}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Utilities", "..\Utilities\Utilities\Utilities.csproj", "{924743C5-B5E3-4C84-877C-600B91D774AD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{2B58EDEC-6C4D-467C-BA13-3CCF99BD3E76}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2B58EDEC-6C4D-467C-BA13-3CCF99BD3E76}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2B58EDEC-6C4D-467C-BA13-3CCF99BD3E76}.Release|Any CPU.Build.0 = Release|Any CPU
+		{924743C5-B5E3-4C84-877C-600B91D774AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{924743C5-B5E3-4C84-877C-600B91D774AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{924743C5-B5E3-4C84-877C-600B91D774AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{924743C5-B5E3-4C84-877C-600B91D774AD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
