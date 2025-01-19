@@ -95,7 +95,7 @@ public class GPSManager
         nmea.PositionReceived += positionReceived;
         
         reciever.SentenceReeived += (sender, sentence) => {
-            //Console.WriteLine("Recived: {0}", sentence);
+            Console.WriteLine("Recived: {0}", sentence);
             nmea.Parse(sentence);
         };
     }
