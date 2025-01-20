@@ -22,7 +22,7 @@ public class GPSReceiver : Chetch.Utilities.SerialPortDevice
     #endregion
 
     #region Events
-    public event EventHandler<String>? SentenceReeived;
+    public event EventHandler<String>? SentenceReceived;
     #endregion
 
     #region Constructors
@@ -60,7 +60,7 @@ public class GPSReceiver : Chetch.Utilities.SerialPortDevice
             {
                 SentenceLastReceived = DateTime.Now;
                 LastSentenceReceived = sentence;
-                SentenceReeived?.Invoke(this, sentence);
+                SentenceReceived?.Invoke(this, sentence);
             }
             
         }

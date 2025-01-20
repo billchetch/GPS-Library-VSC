@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GPS", "GPS\GPS.csproj", "{2
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Utilities", "..\Utilities\Utilities\Utilities.csproj", "{924743C5-B5E3-4C84-877C-600B91D774AD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Database", "..\Database\Database\Database.csproj", "{E44101C9-FE8E-4D77-8FDD-3FE362FE401D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{924743C5-B5E3-4C84-877C-600B91D774AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{924743C5-B5E3-4C84-877C-600B91D774AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{924743C5-B5E3-4C84-877C-600B91D774AD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E44101C9-FE8E-4D77-8FDD-3FE362FE401D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E44101C9-FE8E-4D77-8FDD-3FE362FE401D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E44101C9-FE8E-4D77-8FDD-3FE362FE401D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E44101C9-FE8E-4D77-8FDD-3FE362FE401D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

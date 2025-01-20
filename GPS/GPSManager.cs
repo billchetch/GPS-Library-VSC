@@ -1,11 +1,14 @@
 using System;
 using Chetch.Utilities;
+using Chetch.Database;
 
 namespace Chetch.GPS;
 
 public class GPSManager
 {
     #region Constants
+    public const int DEFAULT_LOG_INTERVAL = 10000;
+    public const String DEFAULT_LOG_NAME = "gps-manager";
     #endregion
 
     #region Static stuff
@@ -26,9 +29,7 @@ public class GPSManager
         String? SentenceType = null;
         public DateTime Timestamp;
 
-        public GPSPositionData()
-        {
-        }
+        public GPSPositionData(){}
 
         public GPSPositionData(double latitude, double longitude, double hdop, double vdop, double pdop, String sentenceType)
         {
@@ -38,6 +39,16 @@ public class GPSManager
             VDOP = vdop;
             PDOP = pdop;
             SentenceType = sentenceType;
+            Timestamp = DateTime.Now;
+        }
+
+        public GPSPositionData(GPSPositionData positionData)
+        {
+            Latitude = positionData.Latitude;
+            Longitude = positionData.Longitude;
+            HDOP = positionData.HDOP;
+            VDOP = positionData.VDOP;
+            PDOP = positionData.PDOP;
             Timestamp = DateTime.Now;
         }
 
@@ -88,16 +99,58 @@ public class GPSManager
     #region Fields
     NMEAInterpreter nmea = new NMEAInterpreter();
     GPSReceiver reciever = new GPSReceiver();
+
+    GPSPositionData currentPosition = new GPSPositionData();
+    GPSPositionData? previousPosition;
+
+    String gpsDatabaseName = GPSDBContext.DEFAULT_DATABASE_NAME;
+
+    SysLogDBContext logDBContext;
+    
+
+    System.Timers.Timer logTimer = new System.Timers.Timer();
     #endregion
 
-    public GPSManager()
+    public GPSManager(int logInterval = DEFAULT_LOG_INTERVAL)
     {
-        nmea.PositionReceived += positionReceived;
+        nmea.PositionReceived += (latitude, longitude) => {
+            currentPosition.Latitude = latitude;
+            currentPosition.Longitude = longitude;
+            Console.WriteLine("Position: {0}/{1}", latitude, longitude);
+        };
+        nmea.BearingReceived += (bearing) => { currentPosition.Bearing = bearing; };
+        nmea.SpeedReceived += (speed) => { currentPosition.Speed = speed; };
+        nmea.HDOPReceived += (hdop) => { currentPosition.HDOP = hdop; };
+        nmea.VDOPReceived += (vdop) => { currentPosition.VDOP = vdop; };
+        nmea.PDOPReceived += (pdop) => { currentPosition.PDOP = pdop; };
         
-        reciever.SentenceReeived += (sender, sentence) => {
-            Console.WriteLine("Recived: {0}", sentence);
+        reciever.SentenceReceived += (sender, sentence) => {
+            //Console.WriteLine("Received: {0}", sentence);
             nmea.Parse(sentence);
         };
+
+        reciever.Connected += (sender, connected) => {
+            Console.WriteLine("Connected: {0}", connected);
+        };
+
+        logTimer.AutoReset = true;
+        logTimer.Interval = logInterval;
+        logTimer.Elapsed += (sender, eargs) => {
+                //save current position to db
+                if(reciever.IsConnected)
+                {
+                    //log current position
+                    currentPosition.Timestamp = DateTime.Now;
+
+                    
+                    //record previous position
+                    previousPosition = new GPSPositionData(currentPosition);
+                }
+                else
+                {
+                    //log an error i guess
+                }
+            };
     }
 
     public void StartRecording()
@@ -105,18 +158,24 @@ public class GPSManager
         try
         {
             reciever.Connect();
+
+            //start the timer
+            logTimer.Start();
+
+            //record this in the logs
+            SysLogDBContext.Log(gpsDatabaseName, 
+                SysLogDBContext.LogEntryType.INFO,
+                String.Format("Start recording called, gps receiver connected: {0}", reciever.IsConnected));
+            
         } catch (Exception e)
         {
-            
+            SysLogDBContext.Log(gpsDatabaseName, e);
         }
     }
 
     public void StopRecording()
     {
+        logTimer.Stop();
         reciever.Disconnect();
-    }
-
-    void positionReceived(double latitude, double longitude){
-        Console.WriteLine("Lat/Lon: {0}, {1}", latitude, longitude);
     }
 }
