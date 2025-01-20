@@ -131,6 +131,9 @@ public class GPSManager
 
         reciever.Connected += (sender, connected) => {
             Console.WriteLine("Connected: {0}", connected);
+            SysLogDBContext.Log(gpsDatabaseName, 
+                connected ? SysLogDBContext.LogEntryType.INFO : SysLogDBContext.LogEntryType.WARNING,
+                String.Format("GPS receiver connected: {0}", connected));
         };
 
         logTimer.AutoReset = true;
