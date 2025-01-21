@@ -11,6 +11,7 @@ public class GPSDBContext : ChetchDbContext
     public const String DEFAULT_DATABASE_NAME = "gps";
     #endregion
 
+    #region DB Entities
     [Table("gps_positions")]
     public class GPSPosition
     {
@@ -38,19 +39,36 @@ public class GPSDBContext : ChetchDbContext
         [Column("bearing")]
         public double Bearing { get; set; } //in degrees
 
-        [NotMapped]        
-        String? SentenceType { get; set; } = null;
+        [Column("timestamp")]
+        public DateTime Timestamp { get; set; } = DateTime.Now;
 
         [NotMapped]
-        public DateTime Timestamp;
+        public bool PositionAdded { get; set; } = false;
+
+        public void AddPosition(double latitude, double longitude)
+        {
+            Latitude = latitude;
+            Longitude = longitude;
+            PositionAdded = true;   
+        }
+
+        public void Reset()
+        {
+            PositionAdded = false;
+            ID = 0;
+        }
     }
 
     public DbSet<GPSPosition> GPSPositions { get; set; }
+    #endregion
 
 
     public GPSDBContext(string databaseName = DEFAULT_DATABASE_NAME, string dbConfigKey = "DBConfig") : base(databaseName, dbConfigKey)
     {
     }
 
+    #region Methods
+    
+    #endregion
 
 }

@@ -29,7 +29,7 @@ public class GPSManager
 
     String gpsDatabaseName = GPSDBContext.DEFAULT_DATABASE_NAME;
 
-    SysLogDBContext logDBContext;
+    //SysLogDBContext? logDBContext = null;
     
 
     System.Timers.Timer logTimer = new System.Timers.Timer();
@@ -38,8 +38,7 @@ public class GPSManager
     public GPSManager(int logInterval = DEFAULT_LOG_INTERVAL)
     {
         nmea.PositionReceived += (latitude, longitude) => {
-            CurrentPosition.Latitude = latitude;
-            CurrentPosition.Longitude = longitude;
+            CurrentPosition.AddPosition(latitude, longitude);
             
             Console.WriteLine("Position: {0}/{1}", latitude, longitude);
         };
@@ -75,11 +74,15 @@ public class GPSManager
         logTimer.AutoReset = true;
         logTimer.Interval = logInterval;
         logTimer.Elapsed += (sender, eargs) => {
-                //save current position to database
-                using(var gpsdb = new GPSDBContext(gpsDatabaseName))
+                //save current position to database ... but only if a position has been set
+                if(CurrentPosition.PositionAdded)
                 {
-                    gpsdb.Add(CurrentPosition);
-                    gpsdb.SaveChanges();
+                    using(var gpsdb = new GPSDBContext(gpsDatabaseName))
+                    {
+                        gpsdb.Add(CurrentPosition);
+                        gpsdb.SaveChanges();
+                        CurrentPosition.Reset(); //so can be used again
+                    }
                 }
             };
     }
@@ -104,6 +107,12 @@ public class GPSManager
 
     public void StopRecording()
     {
+        //record this in the logs
+        SysLogDBContext.Log(gpsDatabaseName, 
+            SysLogDBContext.LogEntryType.INFO,
+            String.Format("Stop recording called, gps receiver connected: {0}", reciever.IsConnected),
+            DEFAULT_LOG_NAME);
+
         reciever.Disconnect();
     }
 }
