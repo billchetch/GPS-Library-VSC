@@ -1,6 +1,7 @@
 using System;
 using Chetch.Utilities;
 using Chetch.Database;
+using System.Dynamic;
 
 namespace Chetch.GPS;
 
@@ -15,93 +16,16 @@ public class GPSManager
     #endregion
     
     #region Classes
-    public class GPSPositionData
-    {
-
-        public long DBID = 0;
-        public double Latitude = 0;
-        public double Longitude = 0;
-        public double HDOP = 0;
-        public double VDOP = 0;
-        public double PDOP = 0;
-        public double Speed = 0;
-        public double Bearing = 0; //in degrees
-        String? SentenceType = null;
-        public DateTime Timestamp;
-
-        public GPSPositionData(){}
-
-        public GPSPositionData(double latitude, double longitude, double hdop, double vdop, double pdop, String sentenceType)
-        {
-            Latitude = latitude;
-            Longitude = longitude;
-            HDOP = hdop;
-            VDOP = vdop;
-            PDOP = pdop;
-            SentenceType = sentenceType;
-            Timestamp = DateTime.Now;
-        }
-
-        public GPSPositionData(GPSPositionData positionData)
-        {
-            Latitude = positionData.Latitude;
-            Longitude = positionData.Longitude;
-            HDOP = positionData.HDOP;
-            VDOP = positionData.VDOP;
-            PDOP = positionData.PDOP;
-            Timestamp = DateTime.Now;
-        }
-
-        public void SetMotionData(GPSPositionData previousPos)
-        {
-            double elapsed = (double)(Timestamp - previousPos.Timestamp).TotalSeconds;
-            if (elapsed <= 0) throw new Exception("Bad timestamp diference " + elapsed + "ms");
-
-            //cacculate speed
-            double distance = Measurement.GetDistance(Latitude, Longitude, previousPos.Latitude, previousPos.Longitude);
-            Speed = distance / elapsed;
-            Bearing = Measurement.GetFinalBearing(previousPos.Latitude, previousPos.Longitude, Latitude, Longitude);
-        }
-
-        public override string ToString()
-        {
-            String dt = Timestamp.ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss UTC");
-            return String.Format("{0} Lat/Lon: {1},{2}, Heading: {3}deg @ {4}mps", dt, Latitude, Longitude, Bearing, Speed);
-        }
-    }
-
-    //TODO: record satellite data
-    public class GPSSatelliteData
-    {
-        public int PseudoRandomCode;
-        public int Elevation;
-        public int Azimuth;
-        public int SignalToNoiseRatio;
-
-        public GPSSatelliteData(int[] satellite)
-        {
-            PseudoRandomCode = satellite[0];
-            Elevation = satellite[1];
-            Azimuth = satellite[2];
-            SignalToNoiseRatio = satellite[3];
-        }
-
-        override public String ToString()
-        {
-            return String.Format("E: {0}, A: {1}, S2N: {2}", Elevation, Azimuth, SignalToNoiseRatio);
-        }
-    }
     #endregion
 
     #region Properties
+    public GPSDBContext.GPSPosition CurrentPosition { get; internal set; } = new GPSDBContext.GPSPosition();
+    
     #endregion
 
     #region Fields
     NMEAInterpreter nmea = new NMEAInterpreter();
     GPSReceiver reciever = new GPSReceiver();
-
-    GPSPositionData currentPosition = new GPSPositionData();
-    GPSPositionData? previousPosition;
 
     String gpsDatabaseName = GPSDBContext.DEFAULT_DATABASE_NAME;
 
@@ -114,15 +38,16 @@ public class GPSManager
     public GPSManager(int logInterval = DEFAULT_LOG_INTERVAL)
     {
         nmea.PositionReceived += (latitude, longitude) => {
-            currentPosition.Latitude = latitude;
-            currentPosition.Longitude = longitude;
+            CurrentPosition.Latitude = latitude;
+            CurrentPosition.Longitude = longitude;
+            
             Console.WriteLine("Position: {0}/{1}", latitude, longitude);
         };
-        nmea.BearingReceived += (bearing) => { currentPosition.Bearing = bearing; };
-        nmea.SpeedReceived += (speed) => { currentPosition.Speed = speed; };
-        nmea.HDOPReceived += (hdop) => { currentPosition.HDOP = hdop; };
-        nmea.VDOPReceived += (vdop) => { currentPosition.VDOP = vdop; };
-        nmea.PDOPReceived += (pdop) => { currentPosition.PDOP = pdop; };
+        nmea.BearingReceived += (bearing) => { CurrentPosition.Bearing = bearing; };
+        nmea.SpeedReceived += (speed) => { CurrentPosition.Speed = speed; };
+        nmea.HDOPReceived += (hdop) => { CurrentPosition.HDOP = hdop; };
+        nmea.VDOPReceived += (vdop) => { CurrentPosition.VDOP = vdop; };
+        nmea.PDOPReceived += (pdop) => { CurrentPosition.PDOP = pdop; };
         
         reciever.SentenceReceived += (sender, sentence) => {
             //Console.WriteLine("Received: {0}", sentence);
@@ -131,27 +56,30 @@ public class GPSManager
 
         reciever.Connected += (sender, connected) => {
             Console.WriteLine("Connected: {0}", connected);
+
+            if(connected)
+            {
+                logTimer.Start();
+            }
+            else
+            {
+                logTimer.Stop();
+            }
+
             SysLogDBContext.Log(gpsDatabaseName, 
                 connected ? SysLogDBContext.LogEntryType.INFO : SysLogDBContext.LogEntryType.WARNING,
-                String.Format("GPS receiver connected: {0}", connected));
+                String.Format("GPS receiver connected: {0}", connected),
+                DEFAULT_LOG_NAME);
         };
 
         logTimer.AutoReset = true;
         logTimer.Interval = logInterval;
         logTimer.Elapsed += (sender, eargs) => {
-                //save current position to db
-                if(reciever.IsConnected)
+                //save current position to database
+                using(var gpsdb = new GPSDBContext(gpsDatabaseName))
                 {
-                    //log current position
-                    currentPosition.Timestamp = DateTime.Now;
-
-                    
-                    //record previous position
-                    previousPosition = new GPSPositionData(currentPosition);
-                }
-                else
-                {
-                    //log an error i guess
+                    gpsdb.Add(CurrentPosition);
+                    gpsdb.SaveChanges();
                 }
             };
     }
@@ -162,13 +90,11 @@ public class GPSManager
         {
             reciever.Connect();
 
-            //start the timer
-            logTimer.Start();
-
             //record this in the logs
             SysLogDBContext.Log(gpsDatabaseName, 
                 SysLogDBContext.LogEntryType.INFO,
-                String.Format("Start recording called, gps receiver connected: {0}", reciever.IsConnected));
+                String.Format("Start recording called, gps receiver connected: {0}", reciever.IsConnected),
+                DEFAULT_LOG_NAME);
             
         } catch (Exception e)
         {
@@ -178,7 +104,6 @@ public class GPSManager
 
     public void StopRecording()
     {
-        logTimer.Stop();
         reciever.Disconnect();
     }
 }
