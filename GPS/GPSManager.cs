@@ -10,16 +10,31 @@ public class GPSManager
     #region Constants
     public const int DEFAULT_LOG_INTERVAL = 10000;
     public const String DEFAULT_LOG_NAME = "gps-manager";
+    public const String DEVICE_STATUS_KEY = "gps-device-status";
     #endregion
 
     #region Static stuff
     #endregion
     
     #region Classes
+    class DeviceStatus
+    {
+        public bool Connected { get; set; }
+        public String? Message {get; set; }
+
+        public DeviceStatus(bool connected, String? message = null)
+        {
+            Connected = connected;
+            Message = message;
+        }
+    }
+
     #endregion
 
     #region Properties
     public GPSDBContext.GPSPosition CurrentPosition { get; internal set; } = new GPSDBContext.GPSPosition();
+
+    public bool IsReceiverConnected => reciever.IsConnected;
     
     #endregion
 
@@ -28,9 +43,6 @@ public class GPSManager
     GPSReceiver reciever = new GPSReceiver();
 
     String gpsDatabaseName = GPSDBContext.DEFAULT_DATABASE_NAME;
-
-    //SysLogDBContext? logDBContext = null;
-    
 
     System.Timers.Timer logTimer = new System.Timers.Timer();
     #endregion
@@ -69,6 +81,10 @@ public class GPSManager
                 connected ? SysLogDBContext.LogEntryType.INFO : SysLogDBContext.LogEntryType.WARNING,
                 String.Format("GPS receiver connected: {0}", connected),
                 DEFAULT_LOG_NAME);
+
+            SysInfoDBContext.Save(gpsDatabaseName, 
+                DEVICE_STATUS_KEY, 
+                new DeviceStatus(reciever.IsConnected, "Device connection status chahgned"));
         };
 
         logTimer.AutoReset = true;
@@ -99,6 +115,10 @@ public class GPSManager
                 String.Format("Start recording called, gps receiver connected: {0}", reciever.IsConnected),
                 DEFAULT_LOG_NAME);
             
+            SysInfoDBContext.Save(gpsDatabaseName, 
+                DEVICE_STATUS_KEY, 
+                new DeviceStatus(reciever.IsConnected, "Service has started"));
+
         } catch (Exception e)
         {
             SysLogDBContext.Log(gpsDatabaseName, e);
