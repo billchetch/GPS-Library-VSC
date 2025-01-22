@@ -52,7 +52,7 @@ public class GPSManager
         nmea.PositionReceived += (latitude, longitude) => {
             CurrentPosition.AddPosition(latitude, longitude);
             
-            Console.WriteLine("Position: {0}/{1}", latitude, longitude);
+            //Console.WriteLine("Position: {0}/{1}", latitude, longitude);
         };
         nmea.BearingReceived += (bearing) => { CurrentPosition.Bearing = bearing; };
         nmea.SpeedReceived += (speed) => { CurrentPosition.Speed = speed; };
@@ -66,7 +66,7 @@ public class GPSManager
         };
 
         reciever.Connected += (sender, connected) => {
-            Console.WriteLine("Connected: {0}", connected);
+            //Console.WriteLine("Connected: {0}", connected);
 
             if(connected)
             {
