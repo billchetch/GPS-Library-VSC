@@ -7,7 +7,7 @@ namespace Chetch.GPS;
 
 //This is assumed to be a serial device
 
-public class GPSReceiver : Chetch.Utilities.SerialPortDevice
+public class GPSReceiver : Chetch.Utilities.SerialPortConnection
 {
 
     #region Constants
