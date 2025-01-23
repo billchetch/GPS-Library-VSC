@@ -49,6 +49,7 @@ public class GPSDBContext : ChetchDbContext
         {
             Latitude = latitude;
             Longitude = longitude;
+            Timestamp = DateTime.Now;
             PositionAdded = true;   
         }
 
