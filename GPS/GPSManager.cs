@@ -62,7 +62,14 @@ public class GPSManager
         
         reciever.SentenceReceived += (sender, sentence) => {
             //Console.WriteLine("Received: {0}", sentence);
-            nmea.Parse(sentence);
+            try
+            {
+                nmea.Parse(sentence);
+            }
+            catch (Exception e)
+            {
+                SysLogDBContext.Log(gpsDatabaseName, e);
+            }
         };
 
         reciever.Connected += (sender, connected) => {
