@@ -66,8 +66,8 @@ public class GPSDBContext : ChetchDbContext
 
     public GPSDBContext(string databaseName = DEFAULT_DATABASE_NAME, string dbConfigKey = "DBConfig") : base(databaseName, dbConfigKey)
     {
+        AssertDateTimeUtc();
     }
-
     #region Methods
     
     #endregion
