@@ -11,6 +11,8 @@ public class GPSReceiver : Chetch.Utilities.SerialPortConnection
 {
 
     #region Constants
+    const int VENDOR_ID = 0x1546;
+    const int PRODUCT_ID = 0x01a7;
     #endregion
 
     #region Static stuff
@@ -30,24 +32,32 @@ public class GPSReceiver : Chetch.Utilities.SerialPortConnection
     #endregion
 
     #region Methods
-    protected override string getPortName()
+    protected override string GetPortName()
     {
-        String searchFor = String.Empty;
-        String searchKey = String.Empty;
+        String devicePath;
         if(OperatingSystem.IsMacOS())
         {
-            searchFor = "u-blox 7 - GPS/GNSS Receiver";
-            searchKey = "USB Product Name";
+            devicePath = "/dev/tty.usbmodem*";
         }
         else if(OperatingSystem.IsLinux())
         {
-            searchFor = "usb-u-blox"; //Full name: usb-u-blox_AG_-_www.u-blox.com_u-blox_7_-_GPS_GNSS_Receiver-if00 
+            devicePath = "/dev/serial/by-id/usb-u-blox*"; //Full name: usb-u-blox_AG_-_www.u-blox.com_u-blox_7_-_GPS_GNSS_Receiver-if00 
         }
         else
         {
             throw new Exception(String.Format("Operation system {0} is not supported", Environment.OSVersion.Platform));
         }
-        return GetPortNameForDevice(searchFor, searchKey);
+
+        var devices = GetUSBDevices(devicePath);
+        foreach(var f in devices)
+        {
+            USBDeviceInfo di = GetUSBDeviceInfo(f);
+            if(di.IsValidProduct(PRODUCT_ID, VENDOR_ID))
+            {
+                return di.PortName;
+            }
+        }
+        throw new Exception(String.Format("Failed to find port for device path {0}", devicePath));
     }
 
     protected override void OnDataReceived(byte[] data)
