@@ -32,7 +32,7 @@ public class GPSManager
     #endregion
 
     #region Events
-    public event EventHandler<bool>? RecieverConnected;
+    public event EventHandler<bool>? ReceiverConnected;
     #endregion
 
     #region Properties
@@ -77,7 +77,7 @@ public class GPSManager
 
         reciever.Connected += (sender, connected) => {
             //Console.WriteLine("Connected: {0}", connected);
-            RecieverConnected?.Invoke(this, connected);
+            ReceiverConnected?.Invoke(this, connected);
 
             if(connected)
             {
@@ -95,7 +95,7 @@ public class GPSManager
 
             SysInfoDBContext.Save(gpsDatabaseName, 
                 DEVICE_STATUS_KEY, 
-                new DeviceStatus(reciever.IsConnected, "Device connection status chahgned"));
+                new DeviceStatus(reciever.IsConnected, "Device connection status changed"));
         };
 
         logTimer.AutoReset = true;
