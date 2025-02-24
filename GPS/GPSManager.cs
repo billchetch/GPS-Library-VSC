@@ -31,11 +31,14 @@ public class GPSManager
 
     #endregion
 
+    #region Events
+    public event EventHandler<bool>? RecieverConnected;
+    #endregion
+
     #region Properties
     public GPSDBContext.GPSPosition CurrentPosition { get; internal set; } = new GPSDBContext.GPSPosition();
 
     public bool IsReceiverConnected => reciever.IsConnected;
-    
     #endregion
 
     #region Fields
@@ -74,6 +77,7 @@ public class GPSManager
 
         reciever.Connected += (sender, connected) => {
             //Console.WriteLine("Connected: {0}", connected);
+            RecieverConnected?.Invoke(this, connected);
 
             if(connected)
             {
