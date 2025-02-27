@@ -133,6 +133,7 @@ public class GPSManager
         } catch (Exception e)
         {
             SysLogDBContext.Log(gpsDatabaseName, e);
+            throw;
         }
     }
 
